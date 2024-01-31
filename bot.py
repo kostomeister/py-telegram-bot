@@ -6,10 +6,13 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-from openai import OpenAI
+from dependency_injector.wiring import inject, Provide
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from db_handler.db_handler import db
+from utils.containers import Container
+from utils.crud import create_report, get_existing_reports
 from utils.chat_openai import get_chat_report
 from utils.keyboard import (
     locations_keyboard,
@@ -23,7 +26,7 @@ load_dotenv()
 
 # Встановлення токенів для Telegram бота та OpenAI
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 storage = MemoryStorage()
 bot = Bot(token=BOT_TOKEN)
@@ -107,10 +110,15 @@ async def comment_input(message: types.Message, state: FSMContext):
     await BotState.PhotoDecision.set()
 
 
-async def create_ai_report(message: types.Message, user_data: dict):
+@inject
+async def create_ai_report(
+    message: types.Message,
+    user_data: dict,
+    session: AsyncSession = Provide[Container.session],
+):
     # Перевірка чи існує репорт в базі даних від цього користувача для цієї локації
-    existing_reports = db.get_existing_reports(
-        user_id=message.from_user.id, location=user_data["location"]
+    existing_reports = await get_existing_reports(
+        session, user_id=message.from_user.id, location=user_data["location"]
     )
 
     # Формування звіту
@@ -120,15 +128,10 @@ async def create_ai_report(message: types.Message, user_data: dict):
         f"Коментар: {user_data.get('comment', 'Немає коментаря')}\n"
     )
 
-    context_reports = None
-    if existing_reports:
-        # Якщо є репорт, використовуйте його як контекст для OpenAI
-        context_reports = "\n".join([report["comment"] for report in existing_reports])
-
-    openai_response = get_chat_report(client, report, context_reports)
+    openai_response = await get_chat_report(client, report, existing_reports)
 
     # Зберігання даних у базі даних
-    db.insert_report(**user_data, user_id=message.from_user.id)
+    await create_report(**user_data, user_id=message.from_user.id, db=session)
 
     # Скидання стану обробника
     await dp.storage.reset_data(chat=message.chat.id, user=message.from_user.id)
@@ -193,4 +196,8 @@ async def photo_input(message: types.Message, state: FSMContext):
 
 # Запуск бота
 if __name__ == "__main__":
+    # З'єднуємо контейнер з модулем
+    container = Container()
+    container.wire(modules=[__name__])
+
     executor.start_polling(dp, skip_updates=True)
