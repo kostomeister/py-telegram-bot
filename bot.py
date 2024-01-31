@@ -111,7 +111,11 @@ async def comment_input(message: types.Message, state: FSMContext):
 
 
 @inject
-async def create_ai_report(message: types.Message, user_data: dict, session: AsyncSession = Provide[Container.session]):
+async def create_ai_report(
+    message: types.Message,
+    user_data: dict,
+    session: AsyncSession = Provide[Container.session],
+):
     # Перевірка чи існує репорт в базі даних від цього користувача для цієї локації
     existing_reports = await get_existing_reports(
         session, user_id=message.from_user.id, location=user_data["location"]
