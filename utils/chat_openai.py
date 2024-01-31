@@ -1,5 +1,5 @@
 # Отримання результату від OpenAI та відправка його користувачу
-def get_chat_report(client, report, existing_report):
+async def get_chat_report(client, report, existing_report):
 
     if existing_report:
         context = (
@@ -10,7 +10,7 @@ def get_chat_report(client, report, existing_report):
         )
     else:
         context = "По цій локації ще не було звітів ще не було звітів"
-    openai_response = client.chat.completions.create(
+    openai_response = await client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {

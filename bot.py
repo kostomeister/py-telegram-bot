@@ -6,7 +6,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-from openai import OpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
 from db_handler.db_handler import db
@@ -23,7 +23,7 @@ load_dotenv()
 
 # Встановлення токенів для Telegram бота та OpenAI
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 storage = MemoryStorage()
 bot = Bot(token=BOT_TOKEN)
@@ -125,7 +125,7 @@ async def create_ai_report(message: types.Message, user_data: dict):
         # Якщо є репорт, використовуйте його як контекст для OpenAI
         context_reports = "\n".join([report["comment"] for report in existing_reports])
 
-    openai_response = get_chat_report(client, report, context_reports)
+    openai_response = await get_chat_report(client, report, context_reports)
 
     # Зберігання даних у базі даних
     db.insert_report(**user_data, user_id=message.from_user.id)
