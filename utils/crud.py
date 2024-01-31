@@ -8,7 +8,7 @@ async def create_report(
     user_id: int,
     location: str,
     checklist: str,
-    comment: str,
+    comment: str = "Все чисто",
     photo_url: str = None,
 ):
     report = Reports(
@@ -29,4 +29,6 @@ async def get_existing_reports(db: AsyncSession, user_id: int, location: str):
         select(Reports).filter(Reports.user_id == user_id, Reports.location == location)
     )
     reports = result.scalars().all()
-    return reports
+    comments = [report.comment for report in reports]
+
+    return comments

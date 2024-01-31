@@ -128,12 +128,7 @@ async def create_ai_report(
         f"Коментар: {user_data.get('comment', 'Немає коментаря')}\n"
     )
 
-    context_reports = None
-    if existing_reports:
-        # Якщо є репорт, використовуйте його як контекст для OpenAI
-        context_reports = "\n".join([report["comment"] for report in existing_reports])
-
-    openai_response = await get_chat_report(client, report, context_reports)
+    openai_response = await get_chat_report(client, report, existing_reports)
 
     # Зберігання даних у базі даних
     await create_report(**user_data, user_id=message.from_user.id, db=session)
