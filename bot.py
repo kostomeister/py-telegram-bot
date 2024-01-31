@@ -200,4 +200,5 @@ if __name__ == "__main__":
     # З'єднуємо контейнер з модулем
     container = Container()
     container.wire(modules=[__name__])
+
     executor.start_polling(dp, skip_updates=True)
