@@ -10,6 +10,7 @@ async def get_chat_report(client, report, existing_report):
         )
     else:
         context = "По цій локації ще не було звітів ще не було звітів"
+
     openai_response = await client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
