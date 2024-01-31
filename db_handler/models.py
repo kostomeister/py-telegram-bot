@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Text
 from .database import Base
 
 
+# Модель для репортів
 class Reports(Base):
     __tablename__ = "reports"
 
