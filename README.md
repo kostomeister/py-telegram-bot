@@ -20,8 +20,12 @@ cd py-telegram-bot
 ```bash
 pip install -r requirements.txt
 ```
+3. Зараньте міграції
+```
+alembic upgrade head
+```
 
-3. Створіть файл `.env` та заповніть його своїм токеном Telegram та OpenAI:
+4. Створіть файл `.env` та заповніть його своїм токеном Telegram та OpenAI:
 
 ```python
 # .env
@@ -29,7 +33,7 @@ OPENAI_API_KEY=OPENAI_API_KEY
 BOT_TOKEN=BOT_TOKEN
 ```
 
-4. Запустіть бота:
+5. Запустіть бота:
 
 ```bash
 python bot.py
